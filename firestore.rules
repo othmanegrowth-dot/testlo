@@ -1,0 +1,150 @@
+rules_version = '2';
+
+// ===========================================================================
+// REGLES FIRESTORE - projet othmane-growth-backend
+// ===========================================================================
+//
+// CE QUE CES REGLES PERMETTENT
+// ---------------------------------------------------------------------------
+// Un visiteur du site, sans compte et sans authentification, peut creer une
+// demande dans `demandes`. C'est la seule operation ouverte, et elle ne l'est
+// que si le document respecte exactement le schema attendu.
+//
+// CE QU'ELLES INTERDISSENT
+// ---------------------------------------------------------------------------
+// Lire, modifier et supprimer toute demande. Ces trois operations sont
+// ecrites `if false` plutot qu'ometes : une regle refusee reste refusee si une
+// regle plus large est ajoutee plus tard, alors qu'une operation simplement
+// absente pourrait etre accordee par heritage.
+//
+// Aucune regle `allow read, write: if true` n'existe ici, et aucune n'existe
+// ailleurs dans ce fichier : le dernier `match` ferme explicitement tout le
+// reste de la base.
+//
+// ---------------------------------------------------------------------------
+// POURQUOI LE SCHEMA EST VERIFIE ICI ET PAS SEULEMENT DANS LE FORMULAIRE
+// ---------------------------------------------------------------------------
+// La validation du formulaire est une commodite, pas une securite. Ellevit
+// dans le navigateur du visiteur : n'importe quel autre client — une console,
+// un script, une extension — peut ecrire dans `demandes` sans jamais passer
+// par cette page. Les seules regles qui tiennent sont celles du serveur, et
+// le serveur ne voit qu'une chose : `request.resource.data`.
+//
+// C'est donc le document entrant qui est controle, jamais `resource.data`,
+// qui est vide au moment d'une creation.
+//
+// Ce controle est strict dans les deux sens :
+//   - `hasAll` : aucun des neuf champs attendus ne peut manquer ;
+//   - `hasOnly` : aucun champ supplementaire ne peut etre ajoute.
+//
+// Sans le second, un visiteur public pourrait ecrire n'importe quoi dans ses
+// propres documents : un `admin: true`, un `role: "admin"`, une copie de la
+// configuration Firebase. Sans le premier, il pourrait omettre un champ pour
+// contourner une validation ulterieure.
+//
+// ---------------------------------------------------------------------------
+// LES REGLES NE PROTEGENT PAS CONTRE LE SPAM
+// ---------------------------------------------------------------------------
+// Elles garantissent la forme d'un document, pas son volume. Une personne
+// peut continuer d'envoyer autant de demandes bien formees qu'elle veut. Limiter
+// cela demande un autre outil (App Check, ou un comptage dans une fonction
+// Cloud) : ce n'est pas l'objet de ce fichier.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------------------------------------
+    // LES NEUF CHAMPS D'UNE DEMANDE
+    // -----------------------------------------------------------------------
+    // Ecrits une seule fois, et reutilises tels quels par les deux controles
+    // de cle. Ajouter un champ au formulaire oblige a ajouter son nom ici :
+    // c'est une ligne a changer, pas une regle entiere a redecrire.
+    function champsDemande() {
+      return [
+        'nom',
+        'telephone',
+        'entreprise',
+        'secteur',
+        'ville',
+        'objectif',
+        'metaAds',
+        'budgetPublicitaire',
+        'creeLe'
+      ];
+    }
+
+    // -----------------------------------------------------------------------
+    // SCHEMA STRICT D'UNE DEMANDE
+    // -----------------------------------------------------------------------
+    // Les huit reponses doivent etre des chaines non vides, et bornees a 200
+    // caracteres. La borne n'est pas une contrainte de forme : c'est une
+    // protection du point d'ecriture public. Sans elle, un client hostile
+    // pourrait deposer un document de pres d'un mega-octet, pour quelques
+    // euros de facturation et un dossier illisible. 200 caracteres reste tres
+    // au-dessus de toute reponse reelle a une question de ce formulaire.
+    //
+    // `creeLe` doit etre un timestamp. Ecrit avec `serverTimestamp()`, il est
+    // resolu par le serveur : le document ne peut donc pas porter une heure
+    // choisie par le visiteur.
+    function estDemandeValide(d) {
+      return d.keys().hasAll(champsDemande())
+        && d.keys().hasOnly(champsDemande())
+        && d.nom is string
+        && d.nom.size() > 0
+        && d.nom.size() <= 200
+        && d.telephone is string
+        && d.telephone.size() > 0
+        && d.telephone.size() <= 200
+        && d.entreprise is string
+        && d.entreprise.size() > 0
+        && d.entreprise.size() <= 200
+        && d.secteur is string
+        && d.secteur.size() > 0
+        && d.secteur.size() <= 200
+        && d.ville is string
+        && d.ville.size() > 0
+        && d.ville.size() <= 200
+        && d.objectif is string
+        && d.objectif.size() > 0
+        && d.objectif.size() <= 200
+        && d.metaAds is string
+        && d.metaAds.size() > 0
+        && d.metaAds.size() <= 200
+        && d.budgetPublicitaire is string
+        && d.budgetPublicitaire.size() > 0
+        && d.budgetPublicitaire.size() <= 200
+        && d.creeLe is timestamp;
+    }
+
+    match /demandes/{demandeId} {
+
+      // ---------------------------------------------------------------------
+      // CREATE — la seule operation ouverte
+      // ---------------------------------------------------------------------
+      // Elle ne l'est que pour un document conforme. Une creation refusee ne
+      // laisse rien derriere elle : ni document, ni document partiel.
+      allow create: if estDemandeValide(request.resource.data);
+
+      // ---------------------------------------------------------------------
+      // READ, UPDATE, DELETE — refusees
+      // ---------------------------------------------------------------------
+      // Aucune donnee de prospect n'est lisible depuis le navigateur : ni la
+      // liste des demandes, ni une demande particuliere. Le nom d'une societe
+      // et son budget n'appartiennent qu'a la personne qui les a donnes et a
+      // celui qui doit y repondre.
+      allow read: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // -----------------------------------------------------------------------
+    // TOUT LE RESTE EST REFUSE
+    // -----------------------------------------------------------------------
+    // Aucune autre collection n'existe pour l'instant. Cette ligne garantit
+    // que, le jour ou une collection sera ajoutee sans regle, elle sera
+    // refusee par defaut plutot qu'ouverte par omission.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

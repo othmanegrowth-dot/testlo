@@ -254,40 +254,74 @@ export const contact = {
  * ===========================================================================
  *
  * ---------------------------------------------------------------------------
- * POURQUOI CE FICHIER S'ARRETE ICI
+ * OU PART LA DEMANDE
  * ---------------------------------------------------------------------------
- * Aucun service d'envoi n'est configure : il n'existe ni Firebase, ni
- * endpoint, ni cle d'API dans le projet. Rien n'a donc ete invente pour
- * faire fonctionner la demonstration.
- *
- * CE QUI N'A PAS ETE FAIT, ET POURQUOI :
- * - aucun client Firebase n'a ete installe ;
- * - aucune cle, aucun identifiant de projet, aucune URL n'a ete ecrite ;
- * - aucune fausse confirmation n'est affichee a l'utilisateur.
- *
- * Afficher « Merci pour votre demande » sans avoir rien envoye serait le
- * pire des choix : le visiteur repartirait en croyant avoir ete rappelle,
- * et le prospect serait perdu sans aucun signe. Tant que rien n'est
- * branche, la soumission echoue franchement et le formulaire propose un
- * contact direct.
+ * Firestore, via `creerDemande()` : une collection `demandes`, un document
+ * par envoi, une date ecrite par le serveur. Le detail du document est dans
+ * `demandes.ts`, ce fichier ne connait que le contrat.
  *
  * ---------------------------------------------------------------------------
- * LE POINT DE BRANCHEMENT
+ * UNE SEULE FRONTIERE ENTRE LE FORMULAIRE ET LE SERVICE
  * ---------------------------------------------------------------------------
- * Une seule constante est a remplir : `TRANSPORT`. Elle doit recevoir une
- * fonction recevant `Valeurs` et promettant un `ResultatEnvoi`. Rien
- * d'autre, dans tout le projet, n'a besoin d'etre modifie pour brancher un
- * service reel.
+ * `TRANSPORT` est l'unique endroit du projet ou la page rencontre le réseau.
+ * Il reçoit les huit reponses, rend un verdict, et ne leve jamais : une
+ * ecriture refusee devient `echec`, jamais une exception. Le formulaire peut
+ * ainsi rester dans son etat d'echec et y demeurer — bouton actif, valeurs
+ * conservees — au lieu de se retrouver bloque sur « Envoi en cours ».
+ *
+ * ---------------------------------------------------------------------------
+ * LE SDK EST CHARGE AU MOMENT D'ENVOYER, PAS AU CHARGEMENT DE LA PAGE
+ * ---------------------------------------------------------------------------
+ * `demandes.ts` est importe dynamiquement. A lui tout seul il represente
+ * environ 124 kB compresses : importe statiquement, il pèserait sur le
+ * premier affichage de chaque visiteur, pour une operation que presque
+ * personne n'execute. Ce site se vend sur la performance ; il ne peut pas
+ * la perdre avant meme la premiere phrase.
+ *
+ * Le module arrive pendant l'etat « Envoi en cours », que le bouton annonce
+ * deja, et un echec de telechargement tombe dans le meme filet que tout autre
+ * echec : le message d'erreur et les valeurs saisies restent en place.
+ *
+ * ---------------------------------------------------------------------------
+ * CE QUI N'EST PAS FAIT ICI, ET POURQUOI
+ * ---------------------------------------------------------------------------
+ * - aucune confirmation d'envoi, aucune adresse, aucune redirection : ce sont
+ *   les regles Firestore qui decide de ce qu'un visiteur peut ecrire, et on ne
+ *   les contourne pas pour rendre la demonstration plus jolie ;
+ * - aucune authentification, aucun tableau de bord, aucun e-mail : une seule
+ *   ecriture depuis une page publique, c'est tout ce que demande cette etape ;
+ * - aucun WhatsApp automatique : le lien de repli existe deja dans le
+ *   formulaire et ne s'affiche qu'en cas d'echec, ce qui n'est pas une
+ *   redirection.
  */
 
 export type ResultatEnvoi = 'envoye' | 'echec' | 'non-configure'
 
 export type Transport = (projet: Valeurs) => Promise<ResultatEnvoi>
 
-/** Remplacez `null` par la fonction d'envoi pour activer la soumission. */
-const TRANSPORT: Transport | null = null
+/**
+ * Envoi reel. Echoue jamais : toute erreur devient `echec`.
+ *
+ * L'import est dynamique, et c'est volontaire : `demandes.ts` tire tout le
+ * SDK Firebase avec lui. Il est donc telecharge au clic, pendant l'etat
+ * « Envoi en cours » deja affiche, et pas au chargement de la page.
+ *
+ * Le `console.error` est le seul log du projet, et il ne s'execute qu'en cas
+ * d'echec — il est donc la trace du developpeur, pas un bruit de fond. Il ne
+ * contient aucune reponse du prospect : ni nom, ni telephone, ni entreprise.
+ * L'utilisateur, lui, ne voit qu'un message francais et garde ses saisies.
+ */
+const TRANSPORT: Transport = async (reponses) => {
+  try {
+    const { creerDemande } = await import('./demandes.ts')
+    await creerDemande(reponses)
+    return 'envoye'
+  } catch (erreur) {
+    console.error('[contact] Demande non enregistree dans Firestore.', erreur)
+    return 'echec'
+  }
+}
 
 export async function envoyerProjet(projet: Valeurs): Promise<ResultatEnvoi> {
-  if (!TRANSPORT) return 'non-configure'
   return TRANSPORT(projet)
 }
