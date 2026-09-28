@@ -36,3 +36,6 @@ node_modules/.tmp
 
 # Vercel
 .vercel
+
+# Clone local du depot (cree pour reconcilier l'historique, a supprimer)
+testlo/
