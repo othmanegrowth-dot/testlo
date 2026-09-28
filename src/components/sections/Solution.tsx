@@ -301,7 +301,28 @@ export function Solution() {
         encart, c'est une ligne de seuil.
       */}
       <Reveal delay={dernier * 90 + 60}>
-        <div className="mt-10 border-t border-gold/30 pt-6 text-center sm:mt-14 sm:pt-8 md:mt-20 md:pt-10">
+        {/*
+          ANCRE `#services`.
+          ---------------------------------------------------------------------------
+          La navbar propose « Services » et « Méthode ». Les deux doivent
+          exister, sans qu'aucune des deux ne soit un renvoi a l'autre.
+
+          Il n'y a qu'une seule section ici, et il doit en rester une : la
+          navbar ne gagne donc pas un bloc « Services » vide, ni un titre
+          supplémentaire. Elle recoit une ancre, posee sur le systeme
+          (Strategie - Contenu - Meta Ads - Acquisition).
+
+          C'est le bon endroit, et le seul : ce sont les trois livrables du
+          studio, donc ce que le lien annonce. `#methode`, elle, reste sur
+          la racine de la section, c'est-a-dire sur les quatre etapes de
+          collaboration — la maniere de travailler. Les deux ancres tombent
+          dans la meme section, mais a deux hauteurs differentes, et
+          justement : « Services » doit faire sauter le cheminement.
+        */}
+        <div
+          id="services"
+          className="mt-10 border-t border-gold/30 pt-6 text-center sm:mt-14 sm:pt-8 md:mt-20 md:pt-10"
+        >
           <p className={microEtiquette}>{solution.system.label}</p>
 
           <p className="mt-4 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 sm:mt-5 sm:gap-x-3.5">

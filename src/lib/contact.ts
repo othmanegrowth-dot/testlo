@@ -8,10 +8,10 @@
  * deja : reconnu son probleme, compris la maniere de travailler, et entendu
  * de vrais clients parler de leur experience.
  *
- * Ce qui lui reste a faire, c'est decrire son projet. Tout le formulaire
- * existe pour obtenir cette description avec le moins de friction possible.
- * C'est aussi le seul endroit ou ses objections peuvent se poser : les
- * reponses qu'il cherche sont dans les champs, pas dans une liste de
+ * Ce qui lui reste a faire, c'est se decrire en quelques reponses fermes. Le
+ * formulaire existe pour obtenir ces reponses avec le moins de friction
+ * possible. C'est aussi le seul endroit ou ses objections peuvent se poser :
+ * les reponses qu'il cherche sont dans les champs, pas dans une liste de
  * questions.
  *
  * ---------------------------------------------------------------------------
@@ -32,12 +32,17 @@
  * pour que la confusion soit impossible.
  *
  * ---------------------------------------------------------------------------
- * LES NEUF CHAMPS SONT OBLIGATOIRES
+ * LES HUIT CHAMPS SONT OBLIGATOIRES, ET ILS SONT TOUS FERMES
  * ---------------------------------------------------------------------------
- * C'est un choix, pas un oubli. Les cinq premiers decrivent qui appelle,
- * les trois suivants ce qu'il cherche et ce qu'il a deja, le dernier est
- * le coeur de la demande : le projet lui-meme. Sans ce dernier, il n'y a
- * rien amirer avant le premier echange.
+ * C'est un choix, pas un oubli. Aucun champ n'est un texte libre : quatre
+ * identifiants, puis quatre questions fermees. Un prospect n'a donc jamais
+ * a rediger quoi que ce soit — il n'a qu'a choisir, et les choix se font
+ * sans reflechir et au clavier comme au doigt.
+ *
+ * La consequence est assumee : la demande est moins riche en surface, et
+ * davantage qualifiee sur des criteres qui servent a la suite de la
+ * conversation. Une reponse de trois lignes sur son projet ne change rien a
+ * la qualite de l'echange ; un secteur et un budget, si.
  *
  * Aucune question n'est posee « pour savoir » : un champ qui ne sert pas a
  * preparer la reponse fait perdre des prospects. Si un jour un champ doit
@@ -58,7 +63,6 @@ export const NOMS_CHAMPS = [
   'objectif',
   'metaAds',
   'budget',
-  'projet',
 ] as const
 
 export type NomChamp = (typeof NOMS_CHAMPS)[number]
@@ -79,14 +83,20 @@ export const contact = {
    * Annonce ce que va se passer apres l'envoi, avant qu'on le demande. Une
    * personne qui hesite a un doute sur la suite ; le dire d'emblee evite
    * qu'elle se demande si sa demande va se perdre dans un trou.
+   *
+   * La phrase ne demande plus rien a ecrire : le formulaire est fait de
+   * choix, et inviter a « decrire » n'aurait plus d'objet.
    */
   intro:
-    'Décrivez-moi simplement votre activité et ce que vous cherchez à améliorer. Je prendrai le temps de regarder votre projet avant de revenir vers vous.',
+    'Quelques informations sur votre activité et ce que vous cherchez à améliorer, et je prendrai le temps d’y regarder avant de revenir vers vous.',
 
   /** Rappel de la regle de saisie, une seule fois, avant le premier champ. */
   mentions: 'Tous les champs sont obligatoires.',
 
-  /** Informations de base. */
+  /**
+   * Les quatre champs d'identite, tous en texte libre : un nom, un numero et
+   * une entreprise ne se choisissent pas dans une liste.
+   */
   champs: {
     nom: {
       label: 'Nom',
@@ -110,11 +120,35 @@ export const contact = {
       /** Aucun `autoComplete` : aucun standard n'existe pour ce champ. */
       autoComplete: undefined as string | undefined,
     },
-    ville: {
-      label: 'Ville',
-      placeholder: 'Votre ville',
-      autoComplete: 'address-level2',
-    },
+  },
+
+  /**
+   * VILLE.
+   *
+   * Elle etait un texte libre, ce qui laissait passer « Casa », « casa »,
+   * « Casablanca » et « Casa Blanca » pour la meme reponse, et imposait de
+   * recopier un mot que presque tout le monde sait deja. La liste est donc
+   * fermee, dans l'ordre demande.
+   *
+   * « Autre » reste obligatoire en fin de liste : sans lui, un visiteur qui
+   * vit hors de ces sept villes serait force de choisir une reponse fausse,
+   * et une reponse fausse ne vaut pas mieux qu'une absence de reponse —
+   * elle rend la donnee inutilisable.
+   */
+  ville: {
+    label: 'Ville',
+    /** Premiere option du select, vide : elle force un choix explicite. */
+    vide: 'Choisissez une ville',
+    options: [
+      'Rabat',
+      'Salé',
+      'Témara',
+      'Skhirat',
+      'Kénitra',
+      'Casablanca',
+      'Mohammedia',
+      'Autre',
+    ],
   },
 
   /** Objectif du projet : une liste courte, pas un questionnaire. */
@@ -169,12 +203,6 @@ export const contact = {
     ],
   },
 
-  projet: {
-    label: 'Parlez-moi un peu de votre projet',
-    placeholder:
-      'Décrivez simplement votre activité, votre objectif et ce que vous aimeriez améliorer.',
-  },
-
   /**
    * Nom d'accesibilite du formulaire. Invisible a l'ecran, il donne un nom
    * au <form> et un titre de section aux technologies d'assistance. C'est du
@@ -193,8 +221,8 @@ export const contact = {
     echec: 'Une erreur est survenue. Vérifiez vos informations et réessayez.',
     /**
      * Repli affiche quand l'envoi echoue. Le formulaire garde toutes les
-     * informations saisies : un prospect qui a ecrit son projet ne doit
-     * pas le perdre parce qu'un appel reseau a echoue.
+     * informations saisies : un prospect ne doit pas avoir a les ressaisir
+     * parce qu'un appel reseau a echoue.
      */
     repli: 'Vous préférez écrire directement ?',
     repliLien: 'Écrire sur WhatsApp',
@@ -218,7 +246,6 @@ export const contact = {
     objectif: 'Veuillez sélectionner votre objectif principal.',
     metaAds: 'Veuillez indiquer si vous utilisez déjà les Meta Ads.',
     budget: 'Veuillez sélectionner une tranche de budget.',
-    projet: 'Veuillez décrire votre projet.',
   } as const satisfies Record<NomChamp, string>,
 } as const
 

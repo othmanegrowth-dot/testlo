@@ -62,6 +62,79 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * 3 bis. SURFACES TRANSLUCIDES
+ * ---------------------------------------------------------------------------
+ * Inspiration Apple, volontairement reduite a ce qui sert la hierarchie.
+ *
+ * Ce n'est PAS du glassmorphism : aucune surface n'est une simple pave de
+ * verre, aucune n'est posee sur un degrade ou un halo. Il n'y a qu'un
+ * materiau, applique a trois endroits seulement, la ou une surface flottante
+ * rend la lecture plus facile :
+ *
+ *   - la navbar et son panneau mobile, qui doivent separer le contenu qui
+ *     defile de la navigation ;
+ *   - le bouton secondaire, qui doit se lire comme un second choix et non
+ *     comme un bouton manquant ;
+ *   - le controle Motion, qui est un petit objet pose sur la barre.
+ *
+ * CE QUI EST INTERDIT ICI, ET NE LE SERA PAS : gros blobs lumineux,
+ * gradients multicolores, neons, 3D, cartes flottantes partout, ombres
+ * lourdes. Si un besoin apparait, il se resout avec le filet et la typo,
+ * pas avec un materiau de plus.
+ *
+ * AUCUN CODE HEXADECIMAL DANS LES COMPOSANTS. Ces surfaces se composent
+ * uniquement des couleurs deja declarees en section 1, via `color-mix()`.
+ * Changer la palette, c'est changer la section 1 : rien d'autre.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  /*
+   * Voile clair : la surface la plus discrete. 5 % de creme suffisent a
+   * detacher l'element du fond sans l'eclaircir, et le flou Evite que le
+   * texte qui passe dessous reste lisible derriere.
+   */
+  .verre {
+    background-color: color-mix(in srgb, var(--color-cream) 5%, transparent);
+    -webkit-backdrop-filter: blur(var(--flou-verre)) saturate(1.2);
+    backdrop-filter: blur(var(--flou-verre)) saturate(1.2);
+  }
+
+  /*
+   * Voile de la navbar. Il est fonce, et non clair : une surface claire
+   * 78 % opaque sur un texte en creme ne tiendrait pas le contraste quand un
+   * titre passerait dessous en defilant. Un voile encre garde le texte stable
+   * quelle que soit ce qui defile, tout en laissant la transparence se voir.
+   */
+  .verre-nav {
+    background-color: color-mix(in srgb, var(--color-ink) 78%, transparent);
+    -webkit-backdrop-filter: blur(var(--flou-nav)) saturate(1.3);
+    backdrop-filter: blur(var(--flou-nav)) saturate(1.3);
+  }
+
+  /*
+   * Filet de surface, plus present que le `border-cream/10` d'une section.
+   * Un panneau qui flotte a besoin d'un contour que le fond n'a pas.
+   */
+  .verre-bordure {
+    border-color: color-mix(in srgb, var(--color-cream) 12%, transparent);
+  }
+}
+
+/*
+ * Repli sans `backdrop-filter`. Sans flou, un voile a 5 % ne cache rien et le
+ * texte passerait au travers : on prefere alors une surface pleine. Un seul
+ * navigateur ancien est concerne, et la regle pese quatre lignes.
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .verre {
+    background-color: var(--color-slate);
+  }
+
+  .verre-nav {
+    background-color: var(--color-ink);
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * 4. ANIMATIONS
  * Une seule animation, volontairement sobre.
  * ------------------------------------------------------------------------- */
@@ -94,23 +167,101 @@
   }
 }
 
-/* Respect des reglages systeme : si l'utilisateur a coupe les animations,
-   rien ne doit bouger. */
+/* ---------------------------------------------------------------------------
+ * LE SOCLE SYSTEME, NON NEGOCIABLE
+ * ---------------------------------------------------------------------------
+ * Ce bloc ne depend pas du bouton Motion : il s'applique quoi qu'il arrive.
+ *
+ * Il ne neutralise QUE l'infini et le defilement fluide. Les apparitions et
+ * les transitions, elles, sont reglees par `data-motion` plus bas, afin que
+ * le bouton reste honnete : un visiteur dont le systeme demande moins
+ * d'animations, et qui reclique deliberement sur le bouton, obtient ce qu'il
+ * a demande — mais jamais une animation perpetuelle ni un scroll anime.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html {
     scroll-behavior: auto !important;
   }
+
+  .animate-souffle {
+    animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 4 bis. LA PREFERENCE DE MOUVEMENT
+ * ---------------------------------------------------------------------------
+ * `<html data-motion="on|off">` est ecrit par `src/lib/motion.ts`, avant le
+ * premier rendu. Le CSS est le seul consommateur de cet attribut : un clic
+ * sur le bouton suffit a arreter ou relancer toute la page, sans qu'un seul
+ * composant ne se re-rende.
+ *
+ * `on` n'a aucune regle. C'est volontaire : le mouvement est l'etat normal,
+ * et la moindre regle d'activation serait une de plus a maintenir.
+ *
+ * `off` fait quatre choses :
+ *   - il rend visibles les blocs qui attendaient leur apparition au scroll ;
+ *   - il neutralise les transformations decorees (parallaxe du Hero) ;
+ *   - il ramene les durees d'animation et de decalage a 0,01 ms ;
+ *   - il ramene les transitions a 0,01 ms.
+ *
+ * Les changements d'etat utiles — l'ouverture du menu mobile, la couleur
+ * d'un survol, la position d'un focus — survivent : ils durent 0,01 ms, ce
+ * qui est instantane sans provoquer le flash que provoquerait
+ * `transition: none` sur un etat qui change.
+ */
+[data-motion='off'] {
+  scroll-behavior: auto;
+}
+
+[data-motion='off'] :where(*, *::before, *::after) {
+  animation-duration: 0.01ms !important;
+  /*
+   * `animation-fill-mode: both` applique l'image de depart pendant le
+   * delai. Ramener la duree a 0,01 ms sans neutraliser le delai laisserait
+   * donc le Hero absent pendant les 80 a 240 ms de ses decalages. Un seul
+   * demarrage, instantane, tel qu'il se passerait sans animation du tout.
+   */
+  animation-delay: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/*
+ * `Reveal` masque un element en attente de.scroll (opacite 0). Cette regle le
+ * rend visible immediatement, y compris si le visiteur bascule l'etat alors
+ * qu'un bloc attend encore. Le composant fait la meme verification en
+ * JavaScript au montage : les deux sont necessaires, l'une pour l'affichage,
+ * l'autre pour la bascule en cours de route.
+ */
+[data-motion='off'] [data-reveler] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Parallaxe du Hero : meme en `motion on`, une reduction systeme l'annule. */
+[data-motion='off'] [data-parallaxe] {
+  transform: none !important;
 }
 
 /* ---------------------------------------------------------------------------
  * 5. STYLES DE BASE
  * ------------------------------------------------------------------------- */
 @layer base {
+  :root {
+    /*
+     * Intensite du flou des surfaces translucides (section 3 bis).
+     *
+     * Deux valeurs, deux usages, volontairement proches : un seul chiffre
+     * aurait signale un choix unique, et le contraste entre une petite
+     * pastille et une barre pleine merite d'etre marque. 12 px suffisent a
+     * estomper un texte qui passe derriere une pastille ; 16 px sont le
+     * minimum pour que la navbar reste calme sur un titre de section.
+     */
+    --flou-verre: 12px;
+    --flou-nav: 16px;
+  }
+
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;

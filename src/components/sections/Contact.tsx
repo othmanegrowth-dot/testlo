@@ -14,7 +14,6 @@ import { Eyebrow } from '../ui/Eyebrow.tsx'
 import {
   ChoiceField,
   SelectField,
-  TextAreaField,
   TextField,
 } from '../ui/Field.tsx'
 import { Reveal } from '../ui/Reveal.tsx'
@@ -29,10 +28,13 @@ const VIDE: Valeurs = {
   objectif: '',
   metaAds: '',
   budget: '',
-  projet: '',
 }
 
-/** Les quatre champs d'identite, dans l'ordre ou ils sont lus. */
+/**
+ * Les quatre champs d'identite, dans l'ordre ou ils sont lus. Ce sont les
+ * quatre derniers champs en texte libre du formulaire : tout le reste est
+ * ferme.
+ */
 const IDENTITE = [
   ['nom', 'text'],
   ['telephone', 'tel'],
@@ -286,41 +288,54 @@ export function Contact() {
                       erreur={erreurs[nom]}
                     />
                   ))}
+                </div>
 
-                  {/*
-                    * La ville ferme la ligne d'identite. Elle occupe sa
-                    * propre ligne plutot que de laisser un trou vide a son
-                    * cote : un trou se voit, une ligne pleine ne se remarque
-                    * pas.
-                    */}
-                  <TextField
+                {/*
+                  LES DEUX LISTES DERRNIERES, COTE A COTE.
+                  ---------------------------------------------------------------------------
+                  Ville et objectif sont deux `select` de meme nature et de meme
+                  longueur de liste. Les empiler donnerait deux bandes
+                  identiques l'une sous l'autre, et il faudrait les parcourir
+                  deux fois pour comprendre qu'elles ne se ressemblent pas.
+
+                  Sur une seule colonne, elles se lisent comme une paire. A
+                  partir de sm, elles passent dans la meme grille que les
+                  quatre champs d'identite : la colonne de formulaire garde
+                  ainsi deux lignes, au lieu de quatre.
+                */}
+                <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
+                  <SelectField
                     id="contact-ville"
                     name="ville"
-                    label={contact.champs.ville.label}
-                    placeholder={contact.champs.ville.placeholder}
-                    autoComplete={contact.champs.ville.autoComplete}
+                    label={contact.ville.label}
                     value={valeurs.ville}
                     onChange={(e) => modifier('ville', e.target.value)}
                     erreur={erreurs.ville}
-                    className="sm:col-span-2"
-                  />
-                </div>
+                  >
+                    <option value="">{contact.ville.vide}</option>
+                    {contact.ville.options.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </SelectField>
 
-                <SelectField
-                  id="contact-objectif"
-                  name="objectif"
-                  label={contact.objectif.label}
-                  value={valeurs.objectif}
-                  onChange={(e) => modifier('objectif', e.target.value)}
-                  erreur={erreurs.objectif}
-                >
-                  <option value="">{contact.objectif.vide}</option>
-                  {contact.objectif.options.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </SelectField>
+                  <SelectField
+                    id="contact-objectif"
+                    name="objectif"
+                    label={contact.objectif.label}
+                    value={valeurs.objectif}
+                    onChange={(e) => modifier('objectif', e.target.value)}
+                    erreur={erreurs.objectif}
+                  >
+                    <option value="">{contact.objectif.vide}</option>
+                    {contact.objectif.options.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </SelectField>
+                </div>
 
                 <ChoiceField
                   id="contact-metaAds"
@@ -347,15 +362,13 @@ export function Contact() {
                   erreur={erreurs.budget}
                 />
 
-                <TextAreaField
-                  id="contact-projet"
-                  name="projet"
-                  label={contact.projet.label}
-                  placeholder={contact.projet.placeholder}
-                  value={valeurs.projet}
-                  onChange={(e) => modifier('projet', e.target.value)}
-                  erreur={erreurs.projet}
-                />
+                {/*
+                  Aucun champ de texte libre ne suit. Le formulaire se
+                  termine sur les deux questions fermees ci-dessus : un
+                  prospect n'a jamais a ecrire un mot pour envoyer sa
+                  demande. Voir la regle de contenu en tete de
+                  `src/lib/contact.ts`.
+                */}
 
                 <div>
                   <Button

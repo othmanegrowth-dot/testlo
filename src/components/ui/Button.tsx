@@ -9,8 +9,11 @@ const base =
 const variants: Record<Variant, string> = {
   // Or plein, texte encre : contraste 7.3:1 (niveau AAA)
   primary: 'bg-gold text-ink hover:bg-gold-hi',
+  // Voile clair (`.verre`, section 3 bis de index.css) : le second choix se
+  // detache du fond sans eclaircir le texte qu'il contient, et garde le meme
+  // traitement de bordure que le bouton plein.
   secondary:
-    'border border-cream/15 text-cream hover:border-gold hover:text-gold',
+    'verre border border-cream/15 text-cream hover:border-gold hover:text-gold',
 }
 
 const sizes: Record<Size, string> = {

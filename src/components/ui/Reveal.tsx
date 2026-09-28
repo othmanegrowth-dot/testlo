@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { mouvementActif } from '../../lib/motion.ts'
+
 /**
  * Apparition douce quand l'element entre dans la fenetre.
  *
@@ -34,6 +36,12 @@ export function Reveal({
 
     // Animations Coupees par le systeme : on n'attend rien, on affiche.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    // Visiteur a coupe le mouvement avec le bouton de la navbar : meme
+    // decision, meme effet. La regle CSS equivalente ne suffirait pas, car
+    // elle n'arrive qu'apres coup : masquer d'abord, puis retablir,
+    // provoquerait un clignotement.
+    if (!mouvementActif()) return
 
     // Onglet masque au moment du montage : IntersectionObserver ne livre
     // AUCUN callback tant que document.hidden vaut true (onglet en
@@ -70,6 +78,13 @@ export function Reveal({
   return (
     <div
       ref={ref}
+      /*
+       * `data-reveler` est le point d'accroche de la regle CSS
+       * `[data-motion='off'] [data-reveler]`. Elle rattrape le cas que le
+       * JavaScript ne peut pas voir : le visiteur qui coupe le mouvement
+       * alors qu'un bloc attend encore son apparition.
+       */
+      data-reveler=""
       className={`${animation} ${className}`}
       style={phase === 'anime' && delay ? { animationDelay: `${delay}ms` } : undefined}
     >
