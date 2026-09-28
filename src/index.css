@@ -1,0 +1,216 @@
+/* ===========================================================================
+ * OTHMANE.GROWTH — DESIGN SYSTEM
+ * ---------------------------------------------------------------------------
+ * CE FICHIER EST LA SOURCE UNIQUE DE VERITE pour les couleurs et la typo.
+ * Pour changer l'identite visuelle du site, tout se passe ici.
+ * Les composants n'utilisent que des utilitaires Tailwind generes a partir
+ * de ces variables (bg-ink, text-gold, bg-slate, font-sans...).
+ * Ne jamais ecrire un code hexadecimal dans un composant.
+ * =========================================================================== */
+
+/* --- Polices auto-hebergees (aucun appel externe) ------------------------- */
+/* Police variable : un seul fichier couvre 100 -> 900.
+   Le navigateur ne telecharge que le subset latin (~47 Ko) grace a
+   unicode-range. L'italique n'est charge que s'il est reellement utilise. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter/wght-italic.css';
+
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+ * 1. COULEURS
+ * Palette definitive. Aucune autre couleur n'est autorisee sans raison.
+ * ------------------------------------------------------------------------- */
+@theme {
+  /* Fond principal - bleu nuit tres fonce */
+  --color-ink: #12151f;
+  /* Accent principal - orange dore. A utiliser avec parcimonie. */
+  --color-gold: #d19a4c;
+  /* Accent clair - uniquement au survol des elements dorés. */
+  --color-gold-hi: #e2b463;
+  /* Texte principal - blanc casse. */
+  --color-cream: #f5f5f0;
+  /* Texte secondaire - gris clair. */
+  --color-mist: #b8b8b8;
+  /* Fond des blocs et citations - gris ardoise fonce. */
+  --color-slate: #1c2130;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. TYPOGRAPHIE
+ * Inter, police variable auto-hebergee.
+ * Les poids 400 / 500 / 600 / 800 et l'italique sont tous couverts par le
+ * meme fichier : il suffit d'appliquer `font-medium`, `font-semibold`, etc.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    Roboto, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. RYTHME ET RAYONS
+ * ------------------------------------------------------------------------- */
+@theme {
+  --radius-btn: 0.625rem; /* 10px - boutons */
+  --radius-card: 0.875rem; /* 14px - cartes */
+  --radius-block: 1rem; /* 16px - grands blocs */
+
+  /* Hauteur de la navbar, utilisee par scroll-padding-top pour que les
+     ancres ne passent pas sous la navbar. */
+  --navbar-h: 4rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. ANIMATIONS
+ * Une seule animation, volontairement sobre.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --animate-reveal: reveal 0.5s ease-out both;
+  /* Respiration tres lente, reservee au lecteur audio en lecture. */
+  --animate-souffle: souffle 2.8s ease-in-out infinite;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Respiration du pictogramme lecture. Amplitude volontairement faible :
+   on doit avoir l'impression que le lecteur est vivant, pas qu'il clignote. */
+@keyframes souffle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Respect des reglages systeme : si l'utilisateur a coupe les animations,
+   rien ne doit bouger. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. STYLES DE BASE
+ * ------------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    /* Les ancres ne doivent pas passer sous la navbar. */
+    scroll-padding-top: calc(var(--navbar-h) + 1rem);
+  }
+
+  body {
+    @apply bg-ink text-cream font-sans antialiased;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-cream;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    @apply bg-gold/30 text-cream;
+  }
+
+  /* Anneau de focus visible, coherent avec l'identite et accessible
+     au clavier. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold;
+  }
+
+  /* Masque la barre de defilement du carrousel « probleme » tout en
+     gardant le defilement tactile et la molette. Le conteneur reste
+     focusable (tabIndex) et son role/label sont announces, donc
+     l'accessibilite ne depend pas de la visibilite de la barre.
+     Sans effet sur desktop : la regle est neutralisee a partir de sm. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* -------------------------------------------------------------------------
+   * LECTEUR AUDIO
+   * ---------------------------------------------------------------------------
+   * Le controle de position est un <input type="range"> NATIF superpose a
+   * la forme d'onde. Le navigateur gere donc seul le clavier, le tactile,
+   * le role ARIA et le nom accessible, sans une ligne de JavaScript.
+   *
+   * On ne fait que le rendre invisible : piste et pouce en transparent.
+   * Ce n'est pas `opacity: 0`, donc le controle n'est toujours pas masque
+   * aux technologies d'assistance, et il reste lisible a la souris.
+   * ---------------------------------------------------------------------- */
+  .player-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    /* La hauteur vient de Tailwind ; on ne force rien ici. */
+    height: 100%;
+  }
+
+  .player-range::-webkit-slider-runnable-track {
+    background: transparent;
+    height: 100%;
+  }
+
+  .player-range::-moz-range-track {
+    background: transparent;
+    height: 100%;
+  }
+
+  /* Pouce transparent mais large (32 px) : la zone cliquable reste
+     confortable au doigt, meme si rien n'est visible. */
+  .player-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 2rem;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .player-range::-moz-range-thumb {
+    width: 2rem;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .player-range:disabled {
+    cursor: not-allowed;
+  }
+}
