@@ -24,6 +24,47 @@
     />
     <meta property="og:image" content="/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Meta Pixel
+         Amorcage officiel, execute une seule fois par chargement de page : le
+         HTML est analyse une fois, `init` et `PageView` ne peuvent donc pas se
+         produire deux fois. Le script distant est asynchrone, il ne bloque
+         jamais l'affichage.
+
+         `disablePushState` est pose AVANT `init`, comme l'exige Meta. Il
+         desactive le comptage automatique des PageView sur changement
+         d'URL. Sans lui, le Pixel considere chaque ancre de la page comme une
+         nouvelle page : or la navigation de ce site se fait uniquement par
+         ancres (#services, #methode, #contact), si bien qu'une seule visite
+         pourrait etre comptee jusqu'a quatre fois. Ce n'est pas une restriction
+         jugee inutile : ce site n'a aucune route, donc aucune vraie page
+         secondaire a mesurer. La visite est comptee une fois, a son arrivee.
+         Ce drapeau n'a aucun effet sur l'evenement `Lead`.
+
+         L'identifiant du Pixel est ecrit ici, et nulle part ailleurs : le
+         fichier src/lib/meta.ts envoie les evenements en reutilisant ce `fbq`,
+         sans jamais le redeclarer ni le reinvoquer. -->
+    <script>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+        }
+        if (!f._fbq) f._fbq = n
+        n.push = n
+        n.loaded = !0
+        n.version = '2.0'
+        n.queue = []
+        t = b.createElement(e)
+        t.async = !0
+        t.src = v
+        s = b.getElementsByTagName(e)[0]
+        s.parentNode.insertBefore(t, s)
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js')
+      fbq.disablePushState = true
+      fbq('init', '1722449412179136')
+      fbq('track', 'PageView')
+    </script>
   </head>
   <body>
     <div id="root"></div>

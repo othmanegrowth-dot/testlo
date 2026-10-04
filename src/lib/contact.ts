@@ -50,6 +50,8 @@
  * est long.
  */
 
+import { suivreLead } from './meta.ts'
+
 /**
  * Ordre des champs. Il sert deux fois : au rendu (ordre de tabulation) et a
  * la validation (premier champ invalide = premier de cette liste).
@@ -310,11 +312,28 @@ export type Transport = (projet: Valeurs) => Promise<ResultatEnvoi>
  * d'echec — il est donc la trace du developpeur, pas un bruit de fond. Il ne
  * contient aucune reponse du prospect : ni nom, ni telephone, ni entreprise.
  * L'utilisateur, lui, ne voit qu'un message francais et garde ses saisies.
+ *
+ * ---------------------------------------------------------------------------
+ * L'EVENEMENT « Lead » EST DECLARE ICI, ET AILLEURS NULLE PART
+ * ---------------------------------------------------------------------------
+ * `suivreLead()` est appele une fois, apres le `await` de `creerDemande()`,
+ * c'est-a-dire au moment precis ou le serveur a confirme l'ecriture.
+ *
+ * Ce choix n'admet aucune marge d'interprétation : la validation a rendu la
+ * main avant d'arriver ici, donc ni le clic seul ni un formulaire incomplet ne
+ * declenchent quoi que ce soit ; et si Firestore refuse l'ecriture, la ligne
+ * qui suit n'est jamais atteinte. Le Lead ne peut donc pas partir sur une
+ * demande qui n'existe pas.
+ *
+ * L'appel est aussi place a l'interieur du `try`, et c'est `suivreLead()` qui
+ * garantit de ne jamais lever. Sans cette garantie, une mesure qui echoue
+ * ferait passer un envoi reussi pour un echec devant le prospect.
  */
 const TRANSPORT: Transport = async (reponses) => {
   try {
     const { creerDemande } = await import('./demandes.ts')
     await creerDemande(reponses)
+    suivreLead()
     return 'envoye'
   } catch (erreur) {
     console.error('[contact] Demande non enregistree dans Firestore.', erreur)
