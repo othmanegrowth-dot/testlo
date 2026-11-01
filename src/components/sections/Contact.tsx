@@ -348,27 +348,34 @@ export function Contact() {
                   colonnes
                 />
 
-                <ChoiceField
-                  id="contact-budget"
-                  name="budget"
-                  legend={contact.budget.question}
-                  note={contact.budget.precision}
-                  options={contact.budget.options.map((label) => ({
-                    valeur: label,
-                    label,
-                  }))}
-                  value={valeurs.budget}
-                  onChange={(v) => modifier('budget', v)}
-                  erreur={erreurs.budget}
-                />
-
                 {/*
-                  Aucun champ de texte libre ne suit. Le formulaire se
-                  termine sur les deux questions fermees ci-dessus : un
-                  prospect n'a jamais a ecrire un mot pour envoyer sa
-                  demande. Voir la regle de contenu en tete de
-                  `src/lib/contact.ts`.
+                  LE BUDGET FERME LE FORMULAIRE, EN SAISIE LIBRE.
+                  ---------------------------------------------------------------------------
+                  C'est le seul champ que le visiteur redige. Il reprend le
+                  meme controle que les quatre champs d'identite — meme fond,
+                  meme filet, meme hauteur, meme focus — pour que la fin du
+                  formulaire ne ressemble pas a un autre formulaire.
+
+                  La precision se lit en petit, juste sous le champ : meme
+                  taille et meme couleur que la mention en tete du formulaire,
+                  pour rester une note et non une seconde question.
                 */}
+                <div>
+                  <TextField
+                    id="contact-budget"
+                    name="budget"
+                    type="text"
+                    label={contact.budget.question}
+                    placeholder={contact.budget.placeholder}
+                    value={valeurs.budget}
+                    onChange={(e) => modifier('budget', e.target.value)}
+                    erreur={erreurs.budget}
+                  />
+
+                  <p className="mt-1.5 text-xs leading-relaxed text-mist/70">
+                    {contact.budget.precision}
+                  </p>
+                </div>
 
                 <div>
                   <Button

@@ -21,23 +21,23 @@
  * questions, des exemples et des messages de validation. Il ne contient
  * aucune information inventee. En particulier :
  *
- *   - aucun tarif d'accompagnement, aucun prix de pack
+ *   - aucun prix de pack, aucune grille tarifaire
  *   - aucune delai de reponse, aucune garantie, aucune promesse
  *   - aucun chiffre d'affaires, nombre de clients ou taux
  *
- * Les seules valeurs monetaires autorisees sont les tranches du BUDGET
- * PUBLICITAIRE, demandees telles quelles. Elles disent ce que le
- * prospect prevoit de depenser pour ses publicites, pas ce qu'il doit
- * payer Othmane. La precision ecrite sous la question existe precisement
- * pour que la confusion soit impossible.
+ * Deux valeurs monetaires seulement sont autorisees, et elles disent deux
+ * choses differentes : le prix plancher de l'accompagnement, affiche a titre
+ * indicatif sous le champ budget, et le budget publicitaire que le prospect
+ * saisit lui-meme. La precision ecrite sous le champ existe precisement pour
+ * que la confusion entre les deux soit impossible.
  *
  * ---------------------------------------------------------------------------
- * LES HUIT CHAMPS SONT OBLIGATOIRES, ET ILS SONT TOUS FERMES
+ * LES HUIT CHAMPS SONT OBLIGATOIRES. SEPT SONT FERMES, UN EST LIBRE.
  * ---------------------------------------------------------------------------
- * C'est un choix, pas un oubli. Aucun champ n'est un texte libre : quatre
- * identifiants, puis quatre questions fermees. Un prospect n'a donc jamais
- * a rediger quoi que ce soit — il n'a qu'a choisir, et les choix se font
- * sans reflechir et au clavier comme au doigt.
+ * C'est un choix, pas un oubli. Quatre identifiants et trois questions
+ * fermees se repondent sans reflechir, au clavier comme au doigt. Seul le
+ * budget s'ecrit librement : il n'existe pas de grille de prix unique, et
+ * imposer des tranches reviendrait a inventer une offre.
  *
  * La consequence est assumee : la demande est moins riche en surface, et
  * davantage qualifiee sur des criteres qui servent a la suite de la
@@ -182,27 +182,29 @@ export const contact = {
   },
 
   /**
-   * Tranches de BUDGET PUBLICITAIRE. Les libelles sont les valeurs de
-   * champ : aucun identifiant technique n'est invente, ce qui rend la
-   * donnee stockee directement lisible.
+   * BUDGET MENSUEL D'ACCOMPAGNEMENT.
    *
-   * La derniere option (« Je ne sais pas encore ») est indispensable. Sans
-   * elle, un prospect qui n'a pas encore chiffre son budget se retrouve
-   * devant un mur et ne remplit rien, alors que c'est precisement la
-   * personne qu'il faut evaluator.
+   * Saisie libre, et non une liste de tranches : un budget d'accompagnement
+   * depend du perimetre du projet, et proposer cinq fourchettes fermees
+   * revenait a imposer une grille qui n'existe pas. Le visiteur ecrit ce
+   * qu'il a prevu, dans ses mots et dans sa devise.
+   *
+   * Le champ reste obligatoire, comme les sept autres : la mention affichee
+   * en tete du formulaire doit rester vraie. Repondre « je ne sais pas »
+   * reste possible, en toutes lettres, et vaut mieux qu'un champ vide.
+   *
+   * La precision sous le champ separe deux montants que le mot « budget »
+   * confond souvent : les honoraires d'accompagnement, affiches a titre
+   * indicatif, et le budget publicitaire, qui vient en plus et n'est pas
+   * inclus.
    */
   budget: {
-    question: 'Quel budget publicitaire envisagez-vous environ ?',
-    /** Precision affichee juste sous la question. */
+    question:
+      'Quel budget mensuel avez-vous prévu pour l’accompagnement de votre projet ?',
+    placeholder: 'Ex. : 3 500 DH / mois',
+    /** Precision affichee en petit, juste sous le champ. */
     precision:
-      'Ces montants concernent uniquement le budget publicitaire, pas les honoraires d’accompagnement.',
-    options: [
-      'Moins de 3 000 DH',
-      '3 000 – 5 000 DH',
-      '5 000 – 10 000 DH',
-      'Plus de 10 000 DH',
-      'Je ne sais pas encore',
-    ],
+      'Honoraires d’accompagnement à partir de 3 500 DH/mois. Budget publicitaire non inclus.',
   },
 
   /**
@@ -247,7 +249,7 @@ export const contact = {
     ville: 'Veuillez renseigner votre ville.',
     objectif: 'Veuillez sélectionner votre objectif principal.',
     metaAds: 'Veuillez indiquer si vous utilisez déjà les Meta Ads.',
-    budget: 'Veuillez sélectionner une tranche de budget.',
+    budget: 'Veuillez renseigner votre budget mensuel.',
   } as const satisfies Record<NomChamp, string>,
 } as const
 
