@@ -34,7 +34,7 @@ rules_version = '2';
 // qui est vide au moment d'une creation.
 //
 // Ce controle est strict dans les deux sens :
-//   - `hasAll` : aucun des neuf champs attendus ne peut manquer ;
+//   - `hasAll` : aucune des quatre cles attendues ne peut manquer ;
 //   - `hasOnly` : aucun champ supplementaire ne peut etre ajoute.
 //
 // Sans le second, un visiteur public pourrait ecrire n'importe quoi dans ses
@@ -54,21 +54,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // -----------------------------------------------------------------------
-    // LES NEUF CHAMPS D'UNE DEMANDE
+    // LES QUATRE CLES D'UNE DEMANDE
     // -----------------------------------------------------------------------
-    // Ecrits une seule fois, et reutilises tels quels par les deux controles
-    // de cle. Ajouter un champ au formulaire oblige a ajouter son nom ici :
-    // c'est une ligne a changer, pas une regle entiere a redecrire.
+    // Ecrites une seule fois, et reutilisees telles quelles par les deux
+    // controles de cle. Ajouter un champ au formulaire oblige a ajouter son
+    // nom ici : c'est une ligne a changer, pas une regle entiere a redecrire.
     function champsDemande() {
       return [
         'nom',
         'telephone',
-        'entreprise',
-        'secteur',
-        'ville',
         'objectif',
-        'metaAds',
-        'budgetPublicitaire',
         'creeLe'
       ];
     }
@@ -76,12 +71,14 @@ service cloud.firestore {
     // -----------------------------------------------------------------------
     // SCHEMA STRICT D'UNE DEMANDE
     // -----------------------------------------------------------------------
-    // Les huit reponses doivent etre des chaines non vides, et bornees a 200
-    // caracteres. La borne n'est pas une contrainte de forme : c'est une
-    // protection du point d'ecriture public. Sans elle, un client hostile
-    // pourrait deposer un document de pres d'un mega-octet, pour quelques
-    // euros de facturation et un dossier illisible. 200 caracteres reste tres
-    // au-dessus de toute reponse reelle a une question de ce formulaire.
+    // `nom` et `telephone` sont des chaines non vides ; `objectif` est une
+    // chaine qui peut etre vide, puisqu'il est facultatif dans le formulaire.
+    // Les trois sont bornees a 200 caracteres. La borne n'est pas une
+    // contrainte de forme : c'est une protection du point d'ecriture public.
+    // Sans elle, un client hostile pourrait deposer un document de pres d'un
+    // mega-octet, pour quelques euros de facturation et un dossier illisible.
+    // 200 caracteres reste tres au-dessus de toute reponse reelle a une
+    // question de ce formulaire.
     //
     // `creeLe` doit etre un timestamp. Ecrit avec `serverTimestamp()`, il est
     // resolu par le serveur : le document ne peut donc pas porter une heure
@@ -95,24 +92,8 @@ service cloud.firestore {
         && d.telephone is string
         && d.telephone.size() > 0
         && d.telephone.size() <= 200
-        && d.entreprise is string
-        && d.entreprise.size() > 0
-        && d.entreprise.size() <= 200
-        && d.secteur is string
-        && d.secteur.size() > 0
-        && d.secteur.size() <= 200
-        && d.ville is string
-        && d.ville.size() > 0
-        && d.ville.size() <= 200
         && d.objectif is string
-        && d.objectif.size() > 0
         && d.objectif.size() <= 200
-        && d.metaAds is string
-        && d.metaAds.size() > 0
-        && d.metaAds.size() <= 200
-        && d.budgetPublicitaire is string
-        && d.budgetPublicitaire.size() > 0
-        && d.budgetPublicitaire.size() <= 200
         && d.creeLe is timestamp;
     }
 
@@ -129,9 +110,9 @@ service cloud.firestore {
       // READ, UPDATE, DELETE — refusees
       // ---------------------------------------------------------------------
       // Aucune donnee de prospect n'est lisible depuis le navigateur : ni la
-      // liste des demandes, ni une demande particuliere. Le nom d'une societe
-      // et son budget n'appartiennent qu'a la personne qui les a donnes et a
-      // celui qui doit y repondre.
+      // liste des demandes, ni une demande particuliere. Un nom et un numero
+      // n'appartiennent qu'a la personne qui les a donnes et a celui qui doit
+      // y repondre.
       allow read: if false;
       allow update: if false;
       allow delete: if false;

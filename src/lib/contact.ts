@@ -8,11 +8,10 @@
  * deja : reconnu son probleme, compris la maniere de travailler, et entendu
  * de vrais clients parler de leur experience.
  *
- * Ce qui lui reste a faire, c'est se decrire en quelques reponses fermes. Le
- * formulaire existe pour obtenir ces reponses avec le moins de friction
- * possible. C'est aussi le seul endroit ou ses objections peuvent se poser :
- * les reponses qu'il cherche sont dans les champs, pas dans une liste de
- * questions.
+ * Ce qui lui reste a faire, c'est laisser un nom et un numero. Le formulaire
+ * existe pour obtenir ces deux informations avec le moins de friction
+ * possible, et pour laisser la porte ouverte a une troisieme reponse sans
+ * jamais l'exiger.
  *
  * ---------------------------------------------------------------------------
  * REGLE ABSOLUE SUR LE CONTENU
@@ -21,33 +20,28 @@
  * questions, des exemples et des messages de validation. Il ne contient
  * aucune information inventee. En particulier :
  *
- *   - aucun prix de pack, aucune grille tarifaire
- *   - aucune delai de reponse, aucune garantie, aucune promesse
+ *   - aucun prix, aucune grille tarifaire
+ *   - aucun delai de reponse, aucune garantie, aucune promesse
  *   - aucun chiffre d'affaires, nombre de clients ou taux
  *
- * Deux valeurs monetaires seulement sont autorisees, et elles disent deux
- * choses differentes : le prix plancher de l'accompagnement, affiche a titre
- * indicatif sous le champ budget, et le budget publicitaire que le prospect
- * saisit lui-meme. La precision ecrite sous le champ existe precisement pour
- * que la confusion entre les deux soit impossible.
+ * ---------------------------------------------------------------------------
+ * TROIS CHAMPS, DEUX OBLIGATOIRES
+ * ---------------------------------------------------------------------------
+ * Un nom et un numero suffisent a rappeler quelqu'un. Tout le reste peut
+ * attendre la conversation : chaque champ supplementaire est une occasion de
+ * plus de refermer la page, et le formulaire est la pour ceux qui n'ont pas
+ * encore envie d'ecrire. Le formulaire precedent demandait une entreprise, un
+ * secteur, une ville, un budget et deux questions fermees ; il a ete reduit,
+ * pas reformate.
  *
- * ---------------------------------------------------------------------------
- * LES HUIT CHAMPS SONT OBLIGATOIRES. SEPT SONT FERMES, UN EST LIBRE.
- * ---------------------------------------------------------------------------
- * C'est un choix, pas un oubli. Quatre identifiants et trois questions
- * fermees se repondent sans reflechir, au clavier comme au doigt. Seul le
- * budget s'ecrit librement : il n'existe pas de grille de prix unique, et
- * imposer des tranches reviendrait a inventer une offre.
+ * L'objectif, lui, se propose et ne se demande pas. Il est facultatif, il ne
+ * porte aucun asterisque et aucun message d'erreur : une reponse vide n'est
+ * pas une donnee manquante, c'est une reponse.
  *
  * La consequence est assumee : la demande est moins riche en surface, et
- * davantage qualifiee sur des criteres qui servent a la suite de la
- * conversation. Une reponse de trois lignes sur son projet ne change rien a
- * la qualite de l'echange ; un secteur et un budget, si.
- *
- * Aucune question n'est posee « pour savoir » : un champ qui ne sert pas a
- * preparer la reponse fait perdre des prospects. Si un jour un champ doit
- * etre retire, ce doit etre parce qu'il ne sert a rien, pas parce qu'il
- * est long.
+ * davantage qualifiee par la conversation qui suit. Une reponse de trois
+ * lignes sur son projet ne change rien a la qualite de l'echange ; un nom et
+ * un numero, si.
  */
 
 import { suivreLead } from './meta.ts'
@@ -56,48 +50,45 @@ import { suivreLead } from './meta.ts'
  * Ordre des champs. Il sert deux fois : au rendu (ordre de tabulation) et a
  * la validation (premier champ invalide = premier de cette liste).
  */
-export const NOMS_CHAMPS = [
-  'nom',
-  'telephone',
-  'entreprise',
-  'secteur',
-  'ville',
-  'objectif',
-  'metaAds',
-  'budget',
-] as const
+export const NOMS_CHAMPS = ['nom', 'telephone', 'objectif'] as const
 
 export type NomChamp = (typeof NOMS_CHAMPS)[number]
+
+/**
+ * Les seuls champs dont l'absence bloque l'envoi. La liste est volontairement
+ * plus courte que `NOMS_CHAMPS` : la validation la lit, le rendu continue de
+ * lire l'ordre complet. Deux listes plutot qu'un booleen par champ, parce
+ * qu'ajouter un champ obligatoire doit rester une ligne a ecrire ici.
+ */
+export const CHAMPS_OBLIGATOIRES = ['nom', 'telephone'] as const
+
+export type ChampObligatoire = (typeof CHAMPS_OBLIGATOIRES)[number]
 
 /** Le formulaire tient en un seul objet plat : une chaine vide = non renseigne. */
 export type Valeurs = Record<NomChamp, string>
 
 export const contact = {
-  eyebrow: 'Parlons de votre projet',
-
   /**
-   * Une invitation, pas une injonction. La forme « Vous avez… ? Parlons-en »
-   * ne met personne devant un mur : elle suppose juste qu'il y a un projet.
+   * Le libelle de section, court, dans la meme famille que « Le probleme »,
+   * « Mon approche » et « Temoignages ». Il ne repete pas le titre : le titre
+   * EST desormais « Parlons de votre projet ».
    */
-  title: 'Vous avez un projet en tête ? Parlons-en.',
+  eyebrow: 'Contact',
+
+  /** Une invitation, pas une injonction. */
+  title: 'Parlons de votre projet.',
 
   /**
    * Annonce ce que va se passer apres l'envoi, avant qu'on le demande. Une
    * personne qui hesite a un doute sur la suite ; le dire d'emblee evite
    * qu'elle se demande si sa demande va se perdre dans un trou.
-   *
-   * La phrase ne demande plus rien a ecrire : le formulaire est fait de
-   * choix, et inviter a « decrire » n'aurait plus d'objet.
    */
   intro:
-    'Quelques informations sur votre activité et ce que vous cherchez à améliorer, et je prendrai le temps d’y regarder avant de revenir vers vous.',
-
-  /** Rappel de la regle de saisie, une seule fois, avant le premier champ. */
-  mentions: 'Tous les champs sont obligatoires.',
+    'Échangeons sur votre activité et voyons comment améliorer votre acquisition de clients grâce au contenu vidéo et à la publicité Meta.',
 
   /**
-   * Les quatre champs d'identite, tous en texte libre : un nom, un numero et
-   * une entreprise ne se choisissent pas dans une liste.
+   * Les deux champs d'identite, tous en texte libre : un nom et un numero ne
+   * se choisissent pas dans une liste. Ce sont les deux seuls obligatoires.
    */
   champs: {
     nom: {
@@ -111,101 +102,35 @@ export const contact = {
       placeholder: '06 XX XX XX XX',
       autoComplete: 'tel',
     },
-    entreprise: {
-      label: 'Nom de l’entreprise',
-      placeholder: 'Nom de votre entreprise',
-      autoComplete: 'organization',
-    },
-    secteur: {
-      label: 'Secteur',
-      placeholder: 'Ex. immobilier, restauration, formation...',
-      /** Aucun `autoComplete` : aucun standard n'existe pour ce champ. */
-      autoComplete: undefined as string | undefined,
-    },
   },
 
   /**
-   * VILLE.
+   * OBJECTIF, FACULTATIF.
    *
-   * Elle etait un texte libre, ce qui laissait passer « Casa », « casa »,
-   * « Casablanca » et « Casa Blanca » pour la meme reponse, et imposait de
-   * recopier un mot que presque tout le monde sait deja. La liste est donc
-   * fermee, dans l'ordre demande.
+   * Une liste fermee, courte, et sans option « Autre » : les quatre reponses
+   * couvrent ce qu'un prospect peut vouloir au premier contact, et une
+   * reponse libre n'apporterait rien qu'une conversation n'apporte mieux.
    *
-   * « Autre » reste obligatoire en fin de liste : sans lui, un visiteur qui
-   * vit hors de ces sept villes serait force de choisir une reponse fausse,
-   * et une reponse fausse ne vaut pas mieux qu'une absence de reponse —
-   * elle rend la donnee inutilisable.
+   * Le champ n'est pas obligatoire, donc l'option vide reste valide et son
+   * libelle le dit. C'est la seule chose a changer si un jour il redevient
+   * obligatoire : la liste des champs obligatoires, dans ce fichier.
    */
-  ville: {
-    label: 'Ville',
-    /** Premiere option du select, vide : elle force un choix explicite. */
-    vide: 'Choisissez une ville',
-    options: [
-      'Rabat',
-      'Salé',
-      'Témara',
-      'Skhirat',
-      'Kénitra',
-      'Casablanca',
-      'Mohammedia',
-      'Autre',
-    ],
-  },
-
-  /** Objectif du projet : une liste courte, pas un questionnaire. */
   objectif: {
-    label: 'Qu’est-ce que vous cherchez principalement à améliorer ?',
-    /** Premiere option du select, vide : elle force un choix explicite. */
-    vide: 'Choisissez un objectif',
+    label: 'Qu’est-ce que vous souhaitez améliorer en priorité ?',
+    vide: 'Choisir un objectif (facultatif)',
     options: [
-      'Générer plus de prospects',
-      'Améliorer ma présence en ligne',
-      'Lancer des publicités',
-      'Créer du contenu',
+      'Générer plus de clients',
+      'Améliorer ma visibilité',
       'Structurer mon acquisition',
-      'Autre',
+      'Je ne sais pas encore',
     ],
   },
 
   /**
-   * Question binaire. Elle ne demande pas si le prospect « fait de la
-   * publicite », mais s'il en a deja fait : la reponse determine ou le
-   * travail peut commencer, et elle se pose en deux secondes.
+   * Reassurance placee sous le bouton, pas au-dessus du formulaire : elle
+   * repond a l'hesitation du dernier instant, celle qui precede le clic.
    */
-  metaAds: {
-    question: 'Utilisez-vous déjà les Meta Ads ?',
-    options: [
-      { valeur: 'oui', label: 'Oui' },
-      { valeur: 'non', label: 'Non' },
-    ],
-  },
-
-  /**
-   * BUDGET MENSUEL D'ACCOMPAGNEMENT.
-   *
-   * Saisie libre, et non une liste de tranches : un budget d'accompagnement
-   * depend du perimetre du projet, et proposer cinq fourchettes fermees
-   * revenait a imposer une grille qui n'existe pas. Le visiteur ecrit ce
-   * qu'il a prevu, dans ses mots et dans sa devise.
-   *
-   * Le champ reste obligatoire, comme les sept autres : la mention affichee
-   * en tete du formulaire doit rester vraie. Repondre « je ne sais pas »
-   * reste possible, en toutes lettres, et vaut mieux qu'un champ vide.
-   *
-   * La precision sous le champ separe deux montants que le mot « budget »
-   * confond souvent : les honoraires d'accompagnement, affiches a titre
-   * indicatif, et le budget publicitaire, qui vient en plus et n'est pas
-   * inclus.
-   */
-  budget: {
-    question:
-      'Quel budget mensuel avez-vous prévu pour l’accompagnement de votre projet ?',
-    placeholder: 'Ex. : 3 500 DH / mois',
-    /** Precision affichee en petit, juste sous le champ. */
-    precision:
-      'Honoraires d’accompagnement à partir de 3 500 DH/mois. Budget publicitaire non inclus.',
-  },
+  mentionBouton: 'Consultation gratuite · Sans engagement',
 
   /**
    * Nom d'accesibilite du formulaire. Invisible a l'ecran, il donne un nom
@@ -240,17 +165,15 @@ export const contact = {
    * Ils disent ce qu'il faut faire, jamais pourquoi c'est invalide ni
    * comment l'application fonctionne. C'est la seule chose utile a dire a
    * quelqu'un qui vient de remplir un champ et qui ne comprend pas.
+   *
+   * `Record<ChampObligatoire, string>` et non `Record<NomChamp, string>` :
+   * l'objectif etant facultatif, il n'a pas de message d'erreur, et le type
+   * empeche d'en ajouter un par distraction.
    */
   erreurs: {
     nom: 'Veuillez renseigner votre nom.',
     telephone: 'Veuillez renseigner votre numéro de téléphone.',
-    entreprise: 'Veuillez renseigner le nom de votre entreprise.',
-    secteur: 'Veuillez renseigner votre secteur.',
-    ville: 'Veuillez renseigner votre ville.',
-    objectif: 'Veuillez sélectionner votre objectif principal.',
-    metaAds: 'Veuillez indiquer si vous utilisez déjà les Meta Ads.',
-    budget: 'Veuillez renseigner votre budget mensuel.',
-  } as const satisfies Record<NomChamp, string>,
+  } as const satisfies Record<ChampObligatoire, string>,
 } as const
 
 /* ===========================================================================
@@ -268,7 +191,7 @@ export const contact = {
  * UNE SEULE FRONTIERE ENTRE LE FORMULAIRE ET LE SERVICE
  * ---------------------------------------------------------------------------
  * `TRANSPORT` est l'unique endroit du projet ou la page rencontre le réseau.
- * Il reçoit les huit reponses, rend un verdict, et ne leve jamais : une
+ * Il reçoit les trois reponses, rend un verdict, et ne leve jamais : une
  * ecriture refusee devient `echec`, jamais une exception. Le formulaire peut
  * ainsi rester dans son etat d'echec et y demeurer — bouton actif, valeurs
  * conservees — au lieu de se retrouver bloque sur « Envoi en cours ».

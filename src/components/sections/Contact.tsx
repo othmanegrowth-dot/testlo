@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import {
+  CHAMPS_OBLIGATOIRES,
   NOMS_CHAMPS,
   contact,
   envoyerProjet,
@@ -11,35 +12,23 @@ import { site } from '../../lib/site.ts'
 import { Button } from '../ui/Button.tsx'
 import { Container } from '../ui/Container.tsx'
 import { Eyebrow } from '../ui/Eyebrow.tsx'
-import {
-  ChoiceField,
-  SelectField,
-  TextField,
-} from '../ui/Field.tsx'
+import { SelectField, TextField } from '../ui/Field.tsx'
 import { Reveal } from '../ui/Reveal.tsx'
 
 /** Formulaire vide. Un objet unique, jamais recree a chaque rendu. */
 const VIDE: Valeurs = {
   nom: '',
   telephone: '',
-  entreprise: '',
-  secteur: '',
-  ville: '',
   objectif: '',
-  metaAds: '',
-  budget: '',
 }
 
 /**
- * Les quatre champs d'identite, dans l'ordre ou ils sont lus. Ce sont les
- * quatre derniers champs en texte libre du formulaire : tout le reste est
- * ferme.
+ * Les deux champs d'identite, dans l'ordre ou ils sont lus. Ce sont les deux
+ * seuls champs en texte libre du formulaire : le reste est ferme.
  */
 const IDENTITE = [
   ['nom', 'text'],
   ['telephone', 'tel'],
-  ['entreprise', 'text'],
-  ['secteur', 'text'],
 ] as const
 
 type Etat = 'repos' | 'envoi' | 'succes' | 'echec'
@@ -48,16 +37,15 @@ type Etat = 'repos' | 'envoi' | 'succes' | 'echec'
  * Erreurs de validation, calculees sur un seul critere : le champ est vide
  * ou il ne l'est pas.
  *
- * AUCUNE REGLE DE FORMAT. Ni test sur le telephone, ni verification que la
- * ville existe. Un prospect tape son numero avec ou sans espaces, il se
- * trompe dans son nom d'entreprise : bloquer sa soumission pour cela le
- * ferait abandonner, et la verification se fera tres bien sans formulaire,
- * a l'etape suivante. Le formulaire doit tenir sa promesse, celle de
- * recevoir une demande.
+ * AUCUNE REGLE DE FORMAT. Ni test sur le telephone, ni verification que le
+ * nom est complet. Un prospect tape son numero avec ou sans espaces : bloquer
+ * sa soumission pour cela le ferait abandonner, et la verification se fera
+ * tres bien sans formulaire, a l'etape suivante. Le formulaire doit tenir sa
+ * promesse, celle de recevoir une demande.
  */
 function valider(valeurs: Valeurs): Partial<Record<NomChamp, string>> {
   const erreurs: Partial<Record<NomChamp, string>> = {}
-  for (const nom of NOMS_CHAMPS) {
+  for (const nom of CHAMPS_OBLIGATOIRES) {
     if (valeurs[nom].trim() === '') erreurs[nom] = contact.erreurs[nom]
   }
   return erreurs
@@ -253,10 +241,11 @@ export function Contact() {
                 ref={formRef}
                 /*
                  * `noValidate` desactive les bulles natives du navigateur.
-                 * `required` reste pose sur chaque controle — l'etat
-                 * « obligatoire » continue donc d'etre expose aux
+                 * `required` reste pose sur les deux champs obligatoires —
+                 * l'etat « obligatoire » continue donc d'etre expose aux
                  * technologies d'assistance — mais ce sont nos messages, en
-                 * francais et nommant le champ, qui s'affichent.
+                 * francais et nommant le champ, qui s'affichent. L'objectif,
+                 * facultatif, ne porte pas `required`.
                  */
                 noValidate
                 onSubmit={soumettre}
@@ -267,10 +256,6 @@ export function Contact() {
                 <h3 id="contact-formulaire" className="sr-only">
                   {contact.nomFormulaire}
                 </h3>
-
-                <p className="-mt-1 text-xs text-mist/70">
-                  {contact.mentions}
-                </p>
 
                 <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
                   {IDENTITE.map(([nom, type]) => (
@@ -291,91 +276,35 @@ export function Contact() {
                 </div>
 
                 {/*
-                  LES DEUX LISTES DERRNIERES, COTE A COTE.
+                  L'OBJECTIF, FACULTATIF.
                   ---------------------------------------------------------------------------
-                  Ville et objectif sont deux `select` de meme nature et de meme
-                  longueur de liste. Les empiler donnerait deux bandes
-                  identiques l'une sous l'autre, et il faudrait les parcourir
-                  deux fois pour comprendre qu'elles ne se ressemblent pas.
+                  Il ferme le formulaire et ne le bloque pas : la liste s'ouvre
+                  sur une option vide, donc on peut la traverser sans y
+                  toucher. C'est le seul champ dont l'absence n'est pas une
+                  donnee manquante, et il ne porte ni asterisque ni message
+                  d'erreur.
 
-                  Sur une seule colonne, elles se lisent comme une paire. A
-                  partir de sm, elles passent dans la meme grille que les
-                  quatre champs d'identite : la colonne de formulaire garde
-                  ainsi deux lignes, au lieu de quatre.
+                  Un `select` natif plutot que quatre pastilles : sur un
+                  telephone, le selecteur du systeme reste le controle le plus
+                  rapide, et il permet de revenir a « aucune reponse » apres
+                  avoir touche une option par erreur — ce qu'un groupe de
+                  boutons radio ne permet pas.
                 */}
-                <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
-                  <SelectField
-                    id="contact-ville"
-                    name="ville"
-                    label={contact.ville.label}
-                    value={valeurs.ville}
-                    onChange={(e) => modifier('ville', e.target.value)}
-                    erreur={erreurs.ville}
-                  >
-                    <option value="">{contact.ville.vide}</option>
-                    {contact.ville.options.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </SelectField>
-
-                  <SelectField
-                    id="contact-objectif"
-                    name="objectif"
-                    label={contact.objectif.label}
-                    value={valeurs.objectif}
-                    onChange={(e) => modifier('objectif', e.target.value)}
-                    erreur={erreurs.objectif}
-                  >
-                    <option value="">{contact.objectif.vide}</option>
-                    {contact.objectif.options.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </SelectField>
-                </div>
-
-                <ChoiceField
-                  id="contact-metaAds"
-                  name="metaAds"
-                  legend={contact.metaAds.question}
-                  options={contact.metaAds.options}
-                  value={valeurs.metaAds}
-                  onChange={(v) => modifier('metaAds', v)}
-                  erreur={erreurs.metaAds}
-                  colonnes
-                />
-
-                {/*
-                  LE BUDGET FERME LE FORMULAIRE, EN SAISIE LIBRE.
-                  ---------------------------------------------------------------------------
-                  C'est le seul champ que le visiteur redige. Il reprend le
-                  meme controle que les quatre champs d'identite — meme fond,
-                  meme filet, meme hauteur, meme focus — pour que la fin du
-                  formulaire ne ressemble pas a un autre formulaire.
-
-                  La precision se lit en petit, juste sous le champ : meme
-                  taille et meme couleur que la mention en tete du formulaire,
-                  pour rester une note et non une seconde question.
-                */}
-                <div>
-                  <TextField
-                    id="contact-budget"
-                    name="budget"
-                    type="text"
-                    label={contact.budget.question}
-                    placeholder={contact.budget.placeholder}
-                    value={valeurs.budget}
-                    onChange={(e) => modifier('budget', e.target.value)}
-                    erreur={erreurs.budget}
-                  />
-
-                  <p className="mt-1.5 text-xs leading-relaxed text-mist/70">
-                    {contact.budget.precision}
-                  </p>
-                </div>
+                <SelectField
+                  id="contact-objectif"
+                  name="objectif"
+                  optionnel
+                  label={contact.objectif.label}
+                  value={valeurs.objectif}
+                  onChange={(e) => modifier('objectif', e.target.value)}
+                >
+                  <option value="">{contact.objectif.vide}</option>
+                  {contact.objectif.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </SelectField>
 
                 <div>
                   <Button
@@ -388,6 +317,16 @@ export function Contact() {
                       ? contact.envoi.enCours
                       : contact.envoi.cta}
                   </Button>
+
+                  {/*
+                    * La reassurance se lit sous le bouton, pas au-dessus : elle
+                    * repond a l'hesitation du dernier instant, celle qui
+                    * precede le clic. Meme taille et meme couleur que les notes
+                    * du formulaire.
+                    */}
+                  <p className="mt-3 text-xs leading-relaxed text-mist/70">
+                    {contact.mentionBouton}
+                  </p>
 
                   {/*
                     * L'etat intermediaire est annonce, meme si personne ne

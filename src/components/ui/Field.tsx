@@ -61,6 +61,12 @@ type Base = {
    * l'ARIA : un seul etat pilote les deux, ils ne peuvent pas diverger.
    */
   erreur?: string
+  /**
+   * Le champ accepte une absence de reponse. Par defaut il est obligatoire :
+   * `required` est pose sur le controle et l'etat est expose aux
+   * technologies d'assistance. Un champ facultatif ne doit pas y figurer.
+   */
+  optionnel?: boolean
   /** Ajoute au controle, pour la mise en page (largeur, colonnes). */
   className?: string
 }
@@ -100,6 +106,7 @@ export function TextField({
   id,
   label,
   erreur,
+  optionnel,
   className = '',
   ...props
 }: PropsTexte) {
@@ -108,7 +115,7 @@ export function TextField({
       <input
         {...props}
         id={id}
-        required
+        required={optionnel ? undefined : true}
         aria-invalid={erreur ? true : undefined}
         aria-describedby={erreur ? `${id}-erreur` : undefined}
         className={`${controle} ${filet(Boolean(erreur))} h-11 ${className}`}
@@ -134,6 +141,7 @@ export function SelectField({
   id,
   label,
   erreur,
+  optionnel,
   className = '',
   children,
   ...props
@@ -144,7 +152,7 @@ export function SelectField({
         <select
           {...props}
           id={id}
-          required
+          required={optionnel ? undefined : true}
           aria-invalid={erreur ? true : undefined}
           aria-describedby={erreur ? `${id}-erreur` : undefined}
           className={`${controle} ${filet(Boolean(erreur))} h-11 appearance-none pr-10 ${className}`}
@@ -186,6 +194,7 @@ export function TextAreaField({
   id,
   label,
   erreur,
+  optionnel,
   className = '',
   rows = 5,
   ...props
@@ -195,7 +204,7 @@ export function TextAreaField({
       <textarea
         {...props}
         id={id}
-        required
+        required={optionnel ? undefined : true}
         rows={rows}
         aria-invalid={erreur ? true : undefined}
         aria-describedby={erreur ? `${id}-erreur` : undefined}

@@ -13,19 +13,13 @@
  * LES NOMS DU DOCUMENT SONT CELUX DES QUESTIONS
  * ---------------------------------------------------------------------------
  * Chaque propriete porte le nom exact du champ qu'elle repond, et sa valeur
- * est celle du champ, telle que le prospect l'a choisie dans une liste. Rien
- * n'est traduit, rien n'est normalise, rien n'est abrege.
- *
- * Une seule exception, et elle est faite pour la lectrice et non pour la
- * machine : le champ s'appelle `budget`, le document dit
- * `budgetPublicitaire`. Un document qui ne precise pas de quoi parle son
- * budget est un document qu'il faut relire a chaque fois. La cle reste le mot
- * de la question ; la valeur reste la reponse.
+ * est celle du champ, telle que le prospect l'a saisie ou choisie. Rien n'est
+ * traduit, rien n'est normalise, rien n'est abrege.
  *
  * ---------------------------------------------------------------------------
  * CE QUE LE DOCUMENT NE CONTIENT PAS
  * ---------------------------------------------------------------------------
- * Les huit reponses, et l'heure de l'ecriture. Ni identifiant de visiteur, ni
+ * Les trois reponses, et l'heure de l'ecriture. Ni identifiant de visiteur, ni
  * adresse IP, ni user-agent, ni configuration Firebase : rien qui n'ait ete
  * demande et rien qui ne serve la conversation qui suivra.
  *
@@ -59,20 +53,16 @@ const COLLECTION = 'demandes'
 /**
  * Document enregistre dans `demandes`.
  *
- * Les huit premiers champs sont les huit reponses du formulaire, dans l'ordre
- * ou la personne les a lus. `creeLe` est une horloge du serveur, pas une
- * horloge du navigateur : le champ est ecrit par Firestore au moment exact de
- * l'enregistrement, et non a celui du clic.
+ * Les trois premiers champs sont les trois reponses du formulaire, dans
+ * l'ordre ou la personne les a lus. `objectif` est ecrit meme vide : le champ
+ * est facultatif, et une absence de reponse est une reponse. `creeLe` est une
+ * horloge du serveur, pas une horloge du navigateur : le champ est ecrit par
+ * Firestore au moment exact de l'enregistrement, et non a celui du clic.
  */
 export type Demande = {
   nom: string
   telephone: string
-  entreprise: string
-  secteur: string
-  ville: string
   objectif: string
-  metaAds: string
-  budgetPublicitaire: string
   creeLe: FieldValue
 }
 
@@ -91,12 +81,7 @@ export async function creerDemande(reponses: Valeurs): Promise<void> {
   const demande: Demande = {
     nom: reponses.nom,
     telephone: reponses.telephone,
-    entreprise: reponses.entreprise,
-    secteur: reponses.secteur,
-    ville: reponses.ville,
     objectif: reponses.objectif,
-    metaAds: reponses.metaAds,
-    budgetPublicitaire: reponses.budget,
     creeLe: serverTimestamp(),
   }
 
